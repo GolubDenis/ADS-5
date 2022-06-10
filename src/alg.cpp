@@ -3,24 +3,36 @@
 #include <map>
 #include "tstack.h"
 
+int prior(char symbol) {
+    switch (symbol) {
+        case '(': return 0;
+        case ')': return 1;
+        case '+': return 2;
+        case '-': return 2;
+        case '*': return 3;
+        case '/': return 3;
+        default: return -1;
+    }
+}
+
 std::string infx2pstfx(std::string inf) {
     std::string result = "";
     TStack <char, 100> symbolStack;
     for (int i = 0; i < inf.length(); i++) {
-        if (priority(inf[i]) == -1) {
+        if (prior(inf[i]) == -1) {
             result += inf[i];
-        } else if (priority(inf[i]) > 1 && priority(inf[i]) < 4) {
-            if (symbolStack.Empty() || priority(symbolStack.get()) == 0
-                || (priority(inf[i]) > priority(symbolStack.get()))) {
+        } else if (prior(inf[i]) > 1 && prior(inf[i]) < 4) {
+            if (symbolStack.Empty() || prior(symbolStack.get()) == 0
+                || (prior(inf[i]) > prior(symbolStack.get()))) {
                 symbolStack.push(inf[i]);
                 result += " ";
-            } else if (priority(inf[i]) <= priority(symbolStack.get())) {
+            } else if (prior(inf[i]) <= prior(symbolStack.get())) {
                 result += " ";
                 result += symbolStack.get();
                 symbolStack.pop();
                 result += " ";
-                while ((priority(inf[i]) <= priority(symbolStack.get())
-                    || priority(symbolStack.get()) != 0)
+                while ((prior(inf[i]) <= prior(symbolStack.get())
+                    || prior(symbolStack.get()) != 0)
                     && !symbolStack.Empty()) {
                     result += " ";
                     result += symbolStack.get();
@@ -29,10 +41,10 @@ std::string infx2pstfx(std::string inf) {
                 }
                 symbolStack.push(inf[i]);
             }
-        } else if (priority(inf[i]) == 0) {
+        } else if (prior(inf[i]) == 0) {
             symbolStack.push(inf[i]);
-        } else if (priority(inf[i]) == 1) {
-            while (priority(symbolStack.get()) != 0) {
+        } else if (prior(inf[i]) == 1) {
+            while (prior(symbolStack.get()) != 0) {
                 result += " ";
                 result += symbolStack.get();
                 symbolStack.pop();
@@ -85,16 +97,4 @@ int eval(std::string pref) {
         }
     }
     return intStack.get();
-}
-
-int priority(char symbol) {
-    switch (symbol) {
-        case '(': return 0;
-        case ')': return 1;
-        case '+': return 2;
-        case '-': return 2;
-        case '*': return 3;
-        case '/': return 3;
-        default: return -1;
-    }
 }
