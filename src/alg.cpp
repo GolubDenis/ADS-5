@@ -4,105 +4,97 @@
 #include "tstack.h"
 
 std::string infx2pstfx(std::string inf) {
-    std::string post = "";
-    TStack<char, 100> stack1;
-
+    std::string result = "";
+    TStack <char, 100> symbolStack;
     for (int i = 0; i < inf.length(); i++) {
-        if ((inf[i] >= '0') && (inf[i] <= '9')) {
-            if (post != "") {
-                 if (!((inf[i - 1] >= '0') && (inf[i - 1] <= '9'))) {
-                    post += ' ';
-                 }
-            }
-            post += inf[i];
-        }
-        else {
-            int pr = priority(inf[i]);
-            if (((pr == 0) || (stack1.Empty()) || (pr >
-                priority(stack1.get()))) && (pr != 1)) {
-                stack1.push(inf[i]);
-            }
-            else {
-                if (pr != 1) {
-                    while ((priority(stack1.get()) >= pr) &&
-                        !(stack1.Empty())) {
-                        post += ' ';
-                        post += stack1.get();
-                        stack1.pop();
-                    }
-                    stack1.push(inf[i]);
-
+        if (priority(inf[i]) == -1) {
+            result += inf[i];
+        } else if (priority(inf[i]) > 1 && priority(inf[i]) < 4) {
+            if (symbolStack.Empty() || priority(symbolStack.get()) == 0
+                || (priority(inf[i]) > priority(symbolStack.get()))) {
+                symbolStack.push(inf[i]);
+                result += " ";
+            } else if (priority(inf[i]) <= priority(symbolStack.get())) {
+                result += " ";
+                result += symbolStack.get();
+                symbolStack.pop();
+                result += " ";
+                while ((priority(inf[i]) <= priority(symbolStack.get())
+                    || priority(symbolStack.get()) != 0)
+                    && !symbolStack.Empty()) {
+                    result += " ";
+                    result += symbolStack.get();
+                    symbolStack.pop();
+                    result += " ";
                 }
-                else {
-                    while (priority(stack1.get())) {
-                        post += ' ';
-                        post += stack1.get();
-                        stack1.pop();
-                    }
-                    stack1.pop();
-                }
+                symbolStack.push(inf[i]);
             }
+        } else if (priority(inf[i]) == 0) {
+            symbolStack.push(inf[i]);
+        } else if (priority(inf[i]) == 1) {
+            while (priority(symbolStack.get()) != 0) {
+                result += " ";
+                result += symbolStack.get();
+                symbolStack.pop();
+            }
+            symbolStack.pop();
         }
     }
-    while (!(stack1.Empty())) {
-        post += ' ';
-        post += stack1.get();
-        stack1.pop();
+    while (!symbolStack.Empty()) {
+        result += " ";
+        result += symbolStack.get();
+        symbolStack.pop();
     }
-    return post;
+    return result;
 }
 
 int eval(std::string pref) {
-    TStack<int, 100> stack2;
-    int count = 0;
-    std::string cash = "";
+    TStack<int, 100> intStack;
+    std::string numberString = "";
+    bool isNum = false;
 
     for (int i = 0; i < pref.length(); i++) {
-        if ((pref[i] >= '0') && (pref[i] <= '9')) {
-            count = 1;
-            cash += pref[i];
-        }
-        else {
-            if (count == 1) {
-                stack2.push(std::stoi(cash));
-                count = 0;
-                cash = "";
-            }
-            if (pref[i] != ' ') {
-                int a = stack2.get();
-                stack2.pop();
-                int b = stack2.get();
-                stack2.pop();
+        if (pref[i] <= '9' && pref[i] >= '0') {
+            isNum = true;
+            numberString += pref[i];
+        } else {
+            if (isNum) {
+                intStack.push(stoi(numberString));
+                isNum = false;
+                numberString = "";
+            } else if (pref[i] != ' ') {
+                int a = intStack.get();
+                intStack.pop();
+                int b = intStack.get();
+                intStack.pop();
                 switch (pref[i]) {
                 case '+':
-                    stack2.push(b + a);
+                    intStack.push(b + a);
                     break;
                 case '-':
-                    stack2.push(b - a);
+                    intStack.push(b - a);
                     break;
                 case '*':
-                    stack2.push(b * a);
+                    intStack.push(b * a);
                     break;
                 case '/':
-                    stack2.push(b / a);
+                    intStack.push(b / a);
                     break;
                 }
             }
         }
     }
-return stack2.get();
+    return intStack.get();
 }
 
-int priority(char c) {
-    switch (c) {
-    case '(':
-        return 0;
-    case ')':
-        return 1;
-    case '+': case '-':
-        return 2;
-    case '*': case '/':
-        return 3;
+int priority(char symbol) {
+    switch (symbol) {
+        case '(': return 0;
+        case ')': return 1;
+        case '+': return 2;
+        case '-': return 2;
+        case '*': return 3;
+        case '/': return 3;
+        default: return -1;
     }
-    return -1;
 }
